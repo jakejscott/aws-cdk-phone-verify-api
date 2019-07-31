@@ -4,13 +4,13 @@ This is an open source application designed to show the usage of modern serverle
 
 This is a service that can be used by an application to check that a user is the owner of the phone number they provide.
 
-# Architecture
+## Architecture
 
 ![Diagram](docs/diagram.png)
 
-# API
+## API
 
-## Start verification
+### Start verification
 
 When a user is validating their phone number, the service will send a 6 digit verification code by SMS and waits for their response.
 
@@ -28,7 +28,7 @@ When a user is validating their phone number, the service will send a 6 digit ve
 { "Id": "44c090cc-2ca0-491e-a4d0-dd2b2d4efadb" }
 ```
 
-## Check verification
+### Check verification
 
 The service checks the users input matches the code. If they match it marks the phone number as verified.
 
@@ -46,13 +46,17 @@ The service checks the users input matches the code. If they match it marks the 
 { "Verified": true }
 ```
 
-## Verification Status
+### Verification Status
 
 Use this endpoint to check the status of a verification.
 
 *Status Request*
 
-`GET /verify/status/{id}`
+`POST /verify/status`
+
+```json
+{ "Id": "44c090cc-2ca0-491e-a4d0-dd2b2d4efadb" }
+```
 
 *Status Response:*
 
@@ -60,7 +64,7 @@ Use this endpoint to check the status of a verification.
 { "Verified": true }
 ```
 
-## Errors
+### Errors
 
 Errors will be returned with a 400 status code and a simple error message.
 
@@ -68,3 +72,20 @@ Errors will be returned with a 400 status code and a simple error message.
 { "Error": "Phone required" }
 ```
 
+--------------
+
+### Rate limiting
+
+Start Verification
+
+* The top is 10 every half an hour, per phone number.
+
+Check Verification
+
+* The top is 5 every day, per phone number.
+
+Verification Status
+
+* The top is 60 per minute, per phone number.
+* The top is 180 per hour, per phone number.
+* The top is 250 per day, per phone number.
