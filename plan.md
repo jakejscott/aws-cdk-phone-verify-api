@@ -15,3 +15,9 @@ Stuff to cover in the intro:
 * Api design
 * AWS Cloud Development Kit (CDK) getting started
 
+# Serverless dotnet - E02: Hello, Lambda
+
+* Setup CDK for this project
+* Build a basic "hello world" lambda in dotnet
+* AWS Tooling
+* Api Gateway
