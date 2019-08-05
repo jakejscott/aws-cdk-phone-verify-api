@@ -21,3 +21,12 @@ Stuff to cover in the intro:
 * Build a basic "hello world" lambda in dotnet
 * AWS Tooling
 * Api Gateway
+
+# Serverless dotnet - E03: Sending an SMS
+
+* Request validation
+* libphonenumber C#
+* Development environment
+* Logging with Serilog
+* Request timeout
+* Setup SNS client
