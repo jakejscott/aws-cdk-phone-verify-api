@@ -1,11 +1,27 @@
 import cdk = require('@aws-cdk/core');
 import lambda = require('@aws-cdk/aws-lambda');
 import apigateway = require('@aws-cdk/aws-apigateway');
+import dynamodb = require('@aws-cdk/aws-dynamodb');
+
 import { PolicyStatement, Effect } from '@aws-cdk/aws-iam';
+import { BillingMode } from '@aws-cdk/aws-dynamodb';
 
 export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    const table = new dynamodb.Table(this, 'VerificationsTable', {
+      tableName: 'Verifications',
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      partitionKey: {
+        name: 'Phone',
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: 'Version',
+        type: dynamodb.AttributeType.NUMBER
+      }
+    });
 
     const start = new lambda.Function(this, 'StartLambda', {
       code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi/bin/Debug/netcoreapp2.1/publish'),
@@ -22,6 +38,7 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
     });
 
     start.addToRolePolicy(snsPolicy);
+    table.grantReadWriteData(start);    
 
     const api = new apigateway.RestApi(this, 'AwsCdkPhoneVerifyApi', {
       restApiName: 'AwsCdkPhoneVerifyApi'

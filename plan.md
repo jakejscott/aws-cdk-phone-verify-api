@@ -30,3 +30,17 @@ Stuff to cover in the intro:
 * Logging with Serilog
 * Request timeout
 * Setup SNS client
+
+# Serverless dotnet - E04: DynamoDB Setup
+
+* Tidyup
+* Setup DynamoDB table using CDK
+* Setup DynamoDB client
+* Read/Write data
+* Explain how we will be using DynamoDB in this application
+
+Recommended videos and articles:
+
+* [DynamoDB Best Practices - Using Sort Keys for Version Control](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
+* [AWS re:Invent 2018: Amazon DynamoDB Deep Dive: Advanced Design Patterns for DynamoDB (DAT401)](https://www.youtube.com/watch?v=HaEPXoXVf2k)
+* [AWS re:Invent 2018: Amazon DynamoDB Under the Hood: How We Built a Hyper-Scale Database (DAT321)](https://www.youtube.com/watch?v=yvBR71D0nAQ&t=2774s)

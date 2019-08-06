@@ -2,6 +2,7 @@ using AwsCdkPhoneVerifyApi;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
 using Amazon.SimpleNotificationService;
@@ -12,6 +13,18 @@ namespace Tests
     [TestFixture]
     public class FunctionsTests
     {
+        private static RegionEndpoint DefaultRegion = RegionEndpoint.APSoutheast2;
+        private Functions functions;
+
+        [SetUp]
+        public void SetUp()
+        {
+            var sns = new AmazonSimpleNotificationServiceClient(DefaultRegion);
+            var ddb = new AmazonDynamoDBClient(DefaultRegion);
+            
+            functions = new Functions(sns, ddb);
+        }
+
         [Test]
         public async Task PhoneIsRequired()
         {
@@ -23,7 +36,6 @@ namespace Tests
             };
 
             var context = new TestLambdaContext();
-            var functions = new Functions();
             var response = await functions.StartAsync(request, context);
 
             Assert.AreEqual(400, response.StatusCode);
@@ -36,14 +48,12 @@ namespace Tests
         public async Task PhoneIsInvalid()
         {
             var startRequest = new StartRequest { Phone = "abc1234" };
-
             var request = new APIGatewayProxyRequest()
             {
                 Body = JsonConvert.SerializeObject(startRequest)
             };
 
             var context = new TestLambdaContext();
-            var functions = new Functions();
             var response = await functions.StartAsync(request, context);
 
             Assert.AreEqual(400, response.StatusCode);
@@ -63,10 +73,6 @@ namespace Tests
             };
 
             var context = new TestLambdaContext();
-
-            var sns = new AmazonSimpleNotificationServiceClient(RegionEndpoint.APSoutheast2);
-            var functions = new Functions(sns: sns);
-
             var response = await functions.StartAsync(request, context);
 
             Assert.AreEqual(200, response.StatusCode);
