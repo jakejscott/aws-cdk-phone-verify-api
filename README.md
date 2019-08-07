@@ -6,7 +6,7 @@ This is a service that can be used by an application to check that a user is the
 
 [Watch me build this application on YouTube](https://www.youtube.com/watch?v=c9UXHPX6-Ns&list=PLbuD6VMxPZScqUXKm2QAc_InCGdP6jKJy)
 
-<img src="docs/youtube.png" alt="YouTube" width="300"> </a>
+<img src="docs/youtube.png" alt="YouTube" width="300">
 
 ## Architecture
 
