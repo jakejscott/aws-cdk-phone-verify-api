@@ -4,6 +4,10 @@ This is an open source application designed to show the usage of modern serverle
 
 This is a service that can be used by an application to check that a user is the owner of the phone number they provide.
 
+Watch me build this application on YouTube: https://www.youtube.com/watch?v=c9UXHPX6-Ns&list=PLbuD6VMxPZScqUXKm2QAc_InCGdP6jKJy
+
+<a href="https://www.youtube.com/watch?v=c9UXHPX6-Ns&list=PLbuD6VMxPZScqUXKm2QAc_InCGdP6jKJy"> <img src="docs/youtube.png" alt="YouTube" width="300"> </a>
+
 ## Architecture
 
 ![Diagram](docs/diagram.png)
