@@ -10,5 +10,9 @@ namespace AwsCdkPhoneVerifyApi
         public DateTime Created { get; set; }
         public DateTime? Verified { get; set; }
         public int Attempts { get; set; }
+        public byte[] SecretKey { get; set; }
+
+
+        public bool Expired => DateTime.UtcNow - Created > TimeSpan.FromMinutes(3);
     }
 }

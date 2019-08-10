@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsCdkPhoneVerifyApi", "src\AwsCdkPhoneVerifyApi\AwsCdkPhoneVerifyApi.csproj", "{46A9E54E-ACC2-45D5-99DC-E8D602150464}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsCdkPhoneVerifyApi.Tests", "src\AwsCdkPhoneVerifyApi.Tests\AwsCdkPhoneVerifyApi.Tests.csproj", "{B4A37831-520E-40D0-ADD0-46186748E1D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsCdkPhoneVerifyApi.Tests", "src\AwsCdkPhoneVerifyApi.Tests\AwsCdkPhoneVerifyApi.Tests.csproj", "{B4A37831-520E-40D0-ADD0-46186748E1D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

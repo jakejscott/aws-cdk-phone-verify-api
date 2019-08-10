@@ -44,3 +44,15 @@ Recommended videos and articles:
 * [DynamoDB Best Practices - Using Sort Keys for Version Control](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
 * [AWS re:Invent 2018: Amazon DynamoDB Deep Dive: Advanced Design Patterns for DynamoDB (DAT401)](https://www.youtube.com/watch?v=HaEPXoXVf2k)
 * [AWS re:Invent 2018: Amazon DynamoDB Under the Hood: How We Built a Hyper-Scale Database (DAT321)](https://www.youtube.com/watch?v=yvBR71D0nAQ&t=2774s)
+
+# Serverless dotnet - E05: Generating one-time passwords (HOTP)
+
+* Generating 6 digit one-time password
+* Handle the case when the current verification is expired or already verified
+
+Recommended articles:
+
+* [HMAC based One-time password algorithm](https://en.wikipedia.org/wiki/HMAC-based_One-time_Password_algorithm)
+* [Otp.NET](https://github.com/kspearrin/Otp.NET)
+
+

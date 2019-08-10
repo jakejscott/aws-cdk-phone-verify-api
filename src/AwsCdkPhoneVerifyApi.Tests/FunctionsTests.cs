@@ -7,6 +7,7 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
 using Amazon.SimpleNotificationService;
 using Newtonsoft.Json;
+using OtpNet;
 
 namespace Tests
 {

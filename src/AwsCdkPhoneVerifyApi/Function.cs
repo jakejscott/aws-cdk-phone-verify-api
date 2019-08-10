@@ -6,13 +6,16 @@ using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.SimpleNotificationService;
-using Amazon.SimpleNotificationService.Model;
 using PhoneNumbers;
 using Serilog;
 using Serilog.Context;
 using Serilog.Formatting.Json;
 using Amazon.DynamoDBv2.Model;
 using System;
+using System.Globalization;
+using System.IO;
+using OtpNet;
+using Amazon.SimpleNotificationService.Model;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
@@ -87,20 +90,31 @@ namespace AwsCdkPhoneVerifyApi
                 }
 
                 Verification current = await GetVerificationAsync(startRequest.Phone, latestVersion.Value);
-
                 Log.Information("Current: {@current}", current);
 
+                // Check that it hasn't expired
+                if (current.Verified.HasValue || current.Expired)
+                {
+                    Log.Information("Inserting next verification. Phone: {phone}", current.Phone, current.Version);
+                    current = await InsertNextVersionAsync(current.Phone, current.Version);
+                }
+
+                var hotp = new Hotp(current.SecretKey);
+                var code = hotp.ComputeHOTP(current.Version);
+
+                {
+                    var message = $"Your code is: {code}";
+                    Log.Information("Sending message: {message}", message);
+
+                    var publishRequest = new PublishRequest
+                    {
+                        PhoneNumber = startRequest.Phone,
+                        Message = message
+                    };
                 
-                // {
-                //     var publishRequest = new PublishRequest
-                //     {
-                //         PhoneNumber = startRequest.Phone,
-                //         Message = "Your code is: 123456"
-                //     };
-                //
-                //     var publishResponse = await _sns.PublishAsync(publishRequest);
-                //     Log.Information("Published message. MessageId: {messageId}", publishResponse.MessageId);
-                // }
+                    var publishResponse = await _sns.PublishAsync(publishRequest);
+                    Log.Information("Published message. MessageId: {messageId}", publishResponse.MessageId);
+                }
 
                 var json = JsonConvert.SerializeObject(startRequest, Formatting.None);
 
@@ -110,8 +124,75 @@ namespace AwsCdkPhoneVerifyApi
             }
         }
 
+        private async Task<Verification> InsertNextVersionAsync(string phone, long currentVersion)
+        {
+            byte[] secretKey = KeyGeneration.GenerateRandomKey(20);
+            var nextVersion = currentVersion + 1;
+            var utcNow = DateTime.UtcNow;
+            var id = Guid.NewGuid();
+
+            var request = new TransactWriteItemsRequest
+            {
+                TransactItems = new List<TransactWriteItem>
+                {
+                    new TransactWriteItem
+                    {
+                        Update = new Update
+                        {
+                            TableName = "Verifications",
+                            Key = new Dictionary<string, AttributeValue>()
+                            {
+                                ["Phone"] = new AttributeValue { S = phone },
+                                ["Version"] = new AttributeValue { N = 0.ToString() },
+                            },
+                            ConditionExpression = "Latest = :CurrentVersion",
+                            UpdateExpression = "SET Latest = :NextVersion",
+                            ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                            {
+                                [":CurrentVersion"] = new AttributeValue() { N = currentVersion.ToString() },
+                                [":NextVersion"] = new AttributeValue() { N = nextVersion.ToString() }
+                            }
+                        }
+                    },
+                    new TransactWriteItem
+                    {
+                        Put = new Put
+                        {
+                            TableName = "Verifications",
+                            Item = new Dictionary<string, AttributeValue>
+                            {
+                                ["Phone"] = new AttributeValue { S = phone },
+                                ["Version"] = new AttributeValue { N = nextVersion.ToString() },
+                                ["Id"] = new AttributeValue { S = id.ToString() },
+                                ["Created"] = new AttributeValue { S = utcNow.ToString("o") },
+                                ["Attempts"]= new AttributeValue { N = 0.ToString() },
+                                ["SecretKey"] = new AttributeValue { B = new MemoryStream(secretKey) }
+                            }
+                        },
+                    }
+                }
+            };
+
+            var response = await _ddb.TransactWriteItemsAsync(request);
+
+            var verification = new Verification
+            {
+                Phone = phone,
+                SecretKey = secretKey,
+                Version = nextVersion,
+                Attempts = 0,
+                Verified = null,
+                Created = utcNow,
+                Id = id,
+            };
+
+            return verification;
+        }
+
         private async Task<long?> InsertInitialVersionAsync(string phone)
         {
+            byte[] secretKey = KeyGeneration.GenerateRandomKey(20);
+
             var request = new TransactWriteItemsRequest
             {
                 TransactItems = new List<TransactWriteItem>
@@ -141,6 +222,7 @@ namespace AwsCdkPhoneVerifyApi
                                 ["Id"] = new AttributeValue { S = Guid.NewGuid().ToString() },
                                 ["Created"] = new AttributeValue { S = DateTime.UtcNow.ToString("o") },
                                 ["Attempts"]= new AttributeValue { N = 0.ToString() },
+                                ["SecretKey"] = new AttributeValue { B = new MemoryStream(secretKey) }
                             }
                         },
                     }
@@ -151,7 +233,7 @@ namespace AwsCdkPhoneVerifyApi
             return 1;
         }
 
-        private async Task<Verification> GetVerificationAsync(string phone, long version)
+        public async Task<Verification> GetVerificationAsync(string phone, long version)
         {
             var request = new QueryRequest
             {
@@ -178,8 +260,9 @@ namespace AwsCdkPhoneVerifyApi
                 Phone = item["Phone"].S,
                 Attempts = int.Parse(item["Attempts"].N),
                 Id = Guid.Parse(item["Id"].S),
-                Created = DateTime.Parse(item["Created"].S),
-                Version = long.Parse(item["Version"].N)
+                Created = DateTime.Parse(item["Created"].S, null, DateTimeStyles.RoundtripKind),
+                Version = long.Parse(item["Version"].N),
+                SecretKey = item["SecretKey"].B.ToArray()
             };
 
             if (item.ContainsKey("Verified"))
