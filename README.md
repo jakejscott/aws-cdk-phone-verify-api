@@ -8,7 +8,7 @@ This is a service that can be used by an application to check that a user is the
 
 ## Architecture
 
-![Diagram](docs/diagram.png)
+![Diagram](docs/arch.png)
 
 ## API
 
