@@ -2,7 +2,6 @@ import cdk = require('@aws-cdk/core');
 import lambda = require('@aws-cdk/aws-lambda');
 import apigateway = require('@aws-cdk/aws-apigateway');
 import dynamodb = require('@aws-cdk/aws-dynamodb');
-
 import { PolicyStatement, Effect } from '@aws-cdk/aws-iam';
 import { BillingMode } from '@aws-cdk/aws-dynamodb';
 
@@ -23,10 +22,28 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
       }
     });
 
+    table.addGlobalSecondaryIndex({
+      indexName: 'IdIndex',
+      partitionKey: { 
+        name: 'Id',
+        type: dynamodb.AttributeType.STRING
+       },
+       projectionType: dynamodb.ProjectionType.ALL
+    });
+
+
     const start = new lambda.Function(this, 'StartLambda', {
       code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi/bin/Debug/netcoreapp2.1/publish'),
       runtime: lambda.Runtime.DOTNET_CORE_2_1,
       handler: 'AwsCdkPhoneVerifyApi::AwsCdkPhoneVerifyApi.Functions::StartAsync',
+      memorySize: 3008,
+      timeout: cdk.Duration.seconds(30),
+    });
+
+    const check = new lambda.Function(this, 'CheckLambda', {
+      code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi/bin/Debug/netcoreapp2.1/publish'),
+      runtime: lambda.Runtime.DOTNET_CORE_2_1,
+      handler: 'AwsCdkPhoneVerifyApi::AwsCdkPhoneVerifyApi.Functions::CheckAsync',
       memorySize: 3008,
       timeout: cdk.Duration.seconds(30),
     });
@@ -38,7 +55,8 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
     });
 
     start.addToRolePolicy(snsPolicy);
-    table.grantReadWriteData(start);    
+    table.grantReadWriteData(start); 
+    table.grantReadWriteData(check); 
 
     const api = new apigateway.RestApi(this, 'AwsCdkPhoneVerifyApi', {
       restApiName: 'AwsCdkPhoneVerifyApi'
@@ -48,5 +66,8 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
 
     const startRoute = verifyRoute.addResource('start');
     startRoute.addMethod('POST', new apigateway.LambdaIntegration(start));
+
+    const checkRoute = verifyRoute.addResource('check');
+    checkRoute.addMethod('POST', new apigateway.LambdaIntegration(check));
   }
 }

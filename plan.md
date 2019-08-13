@@ -55,4 +55,12 @@ Recommended articles:
 * [HMAC based One-time password algorithm](https://en.wikipedia.org/wiki/HMAC-based_One-time_Password_algorithm)
 * [Otp.NET](https://github.com/kspearrin/Otp.NET)
 
+# Serverless dotnet - E06: DynamoDB Global Secondary Indexes
+
+* Start implementing the verify endpoint
+* Lookup verification using Id index by using a GSI
+
+Recommended articles:
+
+* DynamoDB GSI https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html
 

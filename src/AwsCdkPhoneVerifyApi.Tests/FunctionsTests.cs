@@ -8,6 +8,7 @@ using Amazon.Lambda.TestUtilities;
 using Amazon.SimpleNotificationService;
 using Newtonsoft.Json;
 using OtpNet;
+using System;
 
 namespace Tests
 {
@@ -66,17 +67,30 @@ namespace Tests
         [Test]
         public async Task PhoneIsValid()
         {
-            var startRequest = new StartRequest { Phone = "+64223062141" };
-
-            var request = new APIGatewayProxyRequest()
+            StartResponse startResponse;
             {
-                Body = JsonConvert.SerializeObject(startRequest)
-            };
+                var startRequest = new StartRequest { Phone = "+64223062141" };
+                var request = new APIGatewayProxyRequest() { Body = JsonConvert.SerializeObject(startRequest) };
+                var context = new TestLambdaContext();
+                var response = await functions.StartAsync(request, context);
 
-            var context = new TestLambdaContext();
-            var response = await functions.StartAsync(request, context);
+                Assert.AreEqual(200, response.StatusCode);
+                startResponse = JsonConvert.DeserializeObject<StartResponse>(response.Body);
+                Assert.NotNull(startResponse.Id);
+            }
 
-            Assert.AreEqual(200, response.StatusCode);
+            {
+                var checkRequest = new CheckRequest { Id = startResponse.Id.Value };
+
+                var request = new APIGatewayProxyRequest() { Body = JsonConvert.SerializeObject(checkRequest) };
+                var context = new TestLambdaContext();
+
+                var response = await functions.CheckAsync(request, context);
+                Assert.AreEqual(200, response.StatusCode);
+
+                var checkResponse = JsonConvert.DeserializeObject<CheckResponse>(response.Body);
+                Assert.True(checkResponse.Verified);
+            }
         }
     }
 }

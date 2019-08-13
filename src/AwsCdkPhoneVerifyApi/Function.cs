@@ -116,9 +116,29 @@ namespace AwsCdkPhoneVerifyApi
                     Log.Information("Published message. MessageId: {messageId}", publishResponse.MessageId);
                 }
 
-                var json = JsonConvert.SerializeObject(startRequest, Formatting.None);
+                var json = JsonConvert.SerializeObject(new StartResponse{ Id = current.Id }, Formatting.None);
+                return new APIGatewayProxyResponse { StatusCode = 200, Body = json };
+            }
+        }
 
-                Log.Information("Request: {json}", json);
+        public async Task<APIGatewayProxyResponse> CheckAsync(APIGatewayProxyRequest request, ILambdaContext context)
+        {
+            await Task.Delay(0);
+
+            using (LogContext.PushProperty("AwsRequestId", context.AwsRequestId))
+            {
+                var checkRequest = JsonConvert.DeserializeObject<CheckRequest>(request.Body);
+                Log.Information("CheckRequest. Id: {id}", checkRequest.Id);
+
+                var verification = await GetVerificationAsync(checkRequest.Id);
+                if (verification == null)
+                {
+                    return ErrorResponse(400, "Verification not found");
+                }
+
+                // 
+
+                var json = JsonConvert.SerializeObject(new CheckResponse { Verified = true }, Formatting.None);
 
                 return new APIGatewayProxyResponse { StatusCode = 200, Body = json };
             }
@@ -233,6 +253,51 @@ namespace AwsCdkPhoneVerifyApi
             return 1;
         }
 
+        public async Task<Verification> GetVerificationAsync(Guid id)
+        {
+            var request = new QueryRequest
+            {
+                TableName = "Verifications",
+                IndexName = "IdIndex",
+                ConsistentRead = false,
+                KeyConditionExpression = "Id = :Id",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    [":Id"] = new AttributeValue() { S = id.ToString() }
+                }
+            };
+
+            var response = await _ddb.QueryAsync(request);
+            if (!response.Items.Any())
+            {
+                return null;
+            }
+
+            var item = response.Items.SingleOrDefault();
+            var verification = Map(item);
+            return verification;
+        }
+
+        private Verification Map(Dictionary<string, AttributeValue> item)
+        {
+            var verification = new Verification
+            {
+                Phone = item["Phone"].S,
+                Attempts = int.Parse(item["Attempts"].N),
+                Id = Guid.Parse(item["Id"].S),
+                Created = DateTime.Parse(item["Created"].S, null, DateTimeStyles.RoundtripKind),
+                Version = long.Parse(item["Version"].N),
+                SecretKey = item["SecretKey"].B.ToArray()
+            };
+
+            if (item.ContainsKey("Verified"))
+            {
+                verification.Verified = DateTime.Parse(item["Verified"].S);
+            }
+
+            return verification;
+        }
+
         public async Task<Verification> GetVerificationAsync(string phone, long version)
         {
             var request = new QueryRequest
@@ -254,22 +319,7 @@ namespace AwsCdkPhoneVerifyApi
             }
 
             var item = response.Items.SingleOrDefault();
-
-            var verification = new Verification
-            {
-                Phone = item["Phone"].S,
-                Attempts = int.Parse(item["Attempts"].N),
-                Id = Guid.Parse(item["Id"].S),
-                Created = DateTime.Parse(item["Created"].S, null, DateTimeStyles.RoundtripKind),
-                Version = long.Parse(item["Version"].N),
-                SecretKey = item["SecretKey"].B.ToArray()
-            };
-
-            if (item.ContainsKey("Verified"))
-            {
-                verification.Verified = DateTime.Parse(item["Verified"].S);
-            }
-
+            var verification = Map(item);
             return verification;
         }
 
