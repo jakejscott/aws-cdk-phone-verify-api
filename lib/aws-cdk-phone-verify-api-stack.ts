@@ -31,6 +31,9 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
        projectionType: dynamodb.ProjectionType.ALL
     });
 
+    const environment = {
+      'MAX_ATTEMPTS': '3'
+    };
 
     const start = new lambda.Function(this, 'StartLambda', {
       code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi/bin/Debug/netcoreapp2.1/publish'),
@@ -38,6 +41,7 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
       handler: 'AwsCdkPhoneVerifyApi::AwsCdkPhoneVerifyApi.Functions::StartAsync',
       memorySize: 3008,
       timeout: cdk.Duration.seconds(30),
+      environment: environment
     });
 
     const check = new lambda.Function(this, 'CheckLambda', {
@@ -46,6 +50,7 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
       handler: 'AwsCdkPhoneVerifyApi::AwsCdkPhoneVerifyApi.Functions::CheckAsync',
       memorySize: 3008,
       timeout: cdk.Duration.seconds(30),
+      environment: environment
     });
 
     var snsPolicy = new PolicyStatement({

@@ -64,3 +64,11 @@ Recommended articles:
 
 * DynamoDB GSI https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html
 
+# Serverless dotnet - E07: Verifying one-time passwords (HOTP)
+
+* Check not already verified
+* Check not expired
+* Check max attempts
+* Validate HOTP code, 
+* Increment attempts if invalid 
+* Set verification date if valid

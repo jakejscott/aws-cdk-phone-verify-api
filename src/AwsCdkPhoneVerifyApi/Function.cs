@@ -27,6 +27,7 @@ namespace AwsCdkPhoneVerifyApi
 
         private IAmazonSimpleNotificationService _sns;
         private IAmazonDynamoDB _ddb;
+        private static int _maxAttempts;
 
         static Functions()
         {
@@ -34,6 +35,9 @@ namespace AwsCdkPhoneVerifyApi
                 .WriteTo.Console(formatter: new JsonFormatter())
                 .Enrich.FromLogContext()
                 .CreateLogger();
+
+            var maxAttempts = Environment.GetEnvironmentVariable("MAX_ATTEMPTS");
+            _maxAttempts = int.TryParse(maxAttempts, out var max) ? max : 3;
         }
 
         public Functions()
@@ -111,20 +115,18 @@ namespace AwsCdkPhoneVerifyApi
                         PhoneNumber = startRequest.Phone,
                         Message = message
                     };
-                
+
                     var publishResponse = await _sns.PublishAsync(publishRequest);
                     Log.Information("Published message. MessageId: {messageId}", publishResponse.MessageId);
                 }
 
-                var json = JsonConvert.SerializeObject(new StartResponse{ Id = current.Id }, Formatting.None);
+                var json = JsonConvert.SerializeObject(new StartResponse { Id = current.Id }, Formatting.None);
                 return new APIGatewayProxyResponse { StatusCode = 200, Body = json };
             }
         }
 
         public async Task<APIGatewayProxyResponse> CheckAsync(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            await Task.Delay(0);
-
             using (LogContext.PushProperty("AwsRequestId", context.AwsRequestId))
             {
                 var checkRequest = JsonConvert.DeserializeObject<CheckRequest>(request.Body);
@@ -133,15 +135,77 @@ namespace AwsCdkPhoneVerifyApi
                 var verification = await GetVerificationAsync(checkRequest.Id);
                 if (verification == null)
                 {
-                    return ErrorResponse(400, "Verification not found");
+                    return ErrorResponse(400, "Not found");
                 }
 
-                // 
+                if (verification.Verified.HasValue)
+                {
+                    return ErrorResponse(400, "Already verified");
+                }
+
+                if (verification.Expired)
+                {
+                    return ErrorResponse(400, "Expired");
+                }
+
+                if (verification.Attempts > _maxAttempts)
+                {
+                    return ErrorResponse(400, "Attempts exceeded");
+                }
+
+                var hotp = new Hotp(verification.SecretKey);
+                if (!hotp.VerifyHotp(checkRequest.Code, verification.Version))
+                {
+                    await IncrementAttemptsAsync(verification.Phone, verification.Version);
+                    return ErrorResponse(400, "Invalid code");
+                }
+
+                await SetVerifiedAsync(verification.Phone, verification.Version);
 
                 var json = JsonConvert.SerializeObject(new CheckResponse { Verified = true }, Formatting.None);
-
                 return new APIGatewayProxyResponse { StatusCode = 200, Body = json };
             }
+        }
+
+        private async Task IncrementAttemptsAsync(string phone, long version)
+        {
+            var request = new UpdateItemRequest
+            {
+                TableName = "Verifications",
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    ["Phone"] = new AttributeValue { S = phone },
+                    ["Version"] = new AttributeValue { N = version.ToString() },
+                },
+                UpdateExpression = "SET Attempts = Attempts + :Value",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                {
+                    [":Value"] = new AttributeValue() { N = 1.ToString() }
+                }
+            };
+
+            await _ddb.UpdateItemAsync(request);
+        }
+
+        private async Task SetVerifiedAsync(string phone, long version)
+        {
+            var request = new UpdateItemRequest
+            {
+                TableName = "Verifications",
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    ["Phone"] = new AttributeValue { S = phone },
+                    ["Version"] = new AttributeValue { N = version.ToString() },
+                },
+                UpdateExpression = "SET Verified = :Verified, Attempts = Attempts + :Value",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                {
+                    [":Verified"] = new AttributeValue() { S = DateTime.UtcNow.ToString("o") },
+                    [":Value"] = new AttributeValue() { N = 1.ToString() }
+                }
+            };
+
+            await _ddb.UpdateItemAsync(request);
         }
 
         private async Task<Verification> InsertNextVersionAsync(string phone, long currentVersion)
