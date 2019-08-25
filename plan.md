@@ -72,3 +72,15 @@ Recommended articles:
 * Validate HOTP code, 
 * Increment attempts if invalid 
 * Set verification date if valid
+
+# Serverless dotnet - E08: Usage plans and API Keys
+
+* Protecting our API using API keys
+* Usage plan rate limiting
+* Create get 'status' endpoint
+
+Recommended articles:
+
+* Usage plans and API keys https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-usage-plans.html
+* API Gateway CDK construct https://docs.aws.amazon.com/cdk/api/latest/docs/aws-apigateway-readme.html#integration-targets
+* Rate limiting https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html

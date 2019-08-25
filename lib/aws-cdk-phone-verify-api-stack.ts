@@ -53,6 +53,15 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
       environment: environment
     });
 
+    const status = new lambda.Function(this, 'StatusLambda', {
+      code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi/bin/Debug/netcoreapp2.1/publish'),
+      runtime: lambda.Runtime.DOTNET_CORE_2_1,
+      handler: 'AwsCdkPhoneVerifyApi::AwsCdkPhoneVerifyApi.Functions::StatusAsync',
+      memorySize: 3008,
+      timeout: cdk.Duration.seconds(30),
+      environment: environment
+    });
+
     var snsPolicy = new PolicyStatement({
       actions: [ "sns:*" ],
       resources: ["*"],
@@ -62,6 +71,7 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
     start.addToRolePolicy(snsPolicy);
     table.grantReadWriteData(start); 
     table.grantReadWriteData(check); 
+    table.grantReadWriteData(status);
 
     const api = new apigateway.RestApi(this, 'AwsCdkPhoneVerifyApi', {
       restApiName: 'AwsCdkPhoneVerifyApi'
@@ -70,9 +80,42 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
     const verifyRoute = api.root.addResource('verify');
 
     const startRoute = verifyRoute.addResource('start');
-    startRoute.addMethod('POST', new apigateway.LambdaIntegration(start));
+    const startMethod = startRoute.addMethod('POST', new apigateway.LambdaIntegration(start), { apiKeyRequired: true });
 
     const checkRoute = verifyRoute.addResource('check');
-    checkRoute.addMethod('POST', new apigateway.LambdaIntegration(check));
+    const checkMethod = checkRoute.addMethod('POST', new apigateway.LambdaIntegration(check), { apiKeyRequired: true });
+
+    const statusRoute = verifyRoute.addResource('status');
+    const statusMethod = statusRoute.addMethod('POST', new apigateway.LambdaIntegration(status), { apiKeyRequired: true });
+
+    const key = api.addApiKey('ApiKey');
+
+    const plan = api.addUsagePlan('UsagePlan', {
+      apiKey: key,
+      name: 'Basic',
+      throttle: {
+        burstLimit: 2,
+        rateLimit: 10
+      }
+    });
+
+    plan.addApiStage({
+      stage: api.deploymentStage,
+      throttle: [
+        {
+          method: startMethod,
+          throttle: { rateLimit: 10, burstLimit: 2 }
+        },
+        {
+          method: checkMethod,
+          throttle: { rateLimit: 10, burstLimit: 2 }
+        },
+        {
+          method: statusMethod,
+          throttle: { rateLimit: 10, burstLimit: 2 }
+        }
+      ]
+    });
+
   }
 }

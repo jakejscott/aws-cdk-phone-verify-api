@@ -167,6 +167,31 @@ namespace AwsCdkPhoneVerifyApi
             }
         }
 
+        public async Task<APIGatewayProxyResponse> StatusAsync(APIGatewayProxyRequest request, ILambdaContext context)
+        {
+            using (LogContext.PushProperty("AwsRequestId", context.AwsRequestId))
+            {
+                var statusRequest = JsonConvert.DeserializeObject<StatusRequest>(request.Body);
+                Log.Information("StatusRequest. Id: {id}", statusRequest.Id);
+
+                var verification = await GetVerificationAsync(statusRequest.Id);
+                if (verification == null)
+                {
+                    return ErrorResponse(400, "Not found");
+                }
+
+                var json = JsonConvert.SerializeObject(new StatusResponse
+                {
+                    Verified = verification.Verified,
+                    Phone = verification.Phone,
+                    Created = verification.Created,
+                    Id = verification.Id
+                }, Formatting.None);
+
+                return new APIGatewayProxyResponse { StatusCode = 200, Body = json };
+            }
+        }
+
         private async Task IncrementAttemptsAsync(string phone, long version)
         {
             var request = new UpdateItemRequest
