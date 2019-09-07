@@ -1,6 +1,4 @@
-﻿using Amazon.Lambda.Core;
-
-namespace AwsCdkPhoneVerifyApi
+﻿namespace AwsCdkPhoneVerifyApi
 {
     public class ErrorResponse
     {

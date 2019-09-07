@@ -1,198 +1,26 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.APIGatewayEvents;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
-using Amazon.SimpleNotificationService;
-using PhoneNumbers;
-using Serilog;
-using Serilog.Context;
-using Serilog.Formatting.Json;
 using Amazon.DynamoDBv2.Model;
 using System;
 using System.Globalization;
 using System.IO;
 using OtpNet;
-using Amazon.SimpleNotificationService.Model;
-
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace AwsCdkPhoneVerifyApi
 {
-    public class Functions
+    public class VerificationsRepository : IVerificationsRepository
     {
-        private static PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.GetInstance();
-
-        private IAmazonSimpleNotificationService _sns;
         private IAmazonDynamoDB _ddb;
-        private static int _maxAttempts;
 
-        static Functions()
+        public VerificationsRepository(IAmazonDynamoDB ddb)
         {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console(formatter: new JsonFormatter())
-                .Enrich.FromLogContext()
-                .CreateLogger();
-
-            var maxAttempts = Environment.GetEnvironmentVariable("MAX_ATTEMPTS");
-            _maxAttempts = int.TryParse(maxAttempts, out var max) ? max : 3;
+            _ddb = ddb ?? throw new ArgumentNullException(nameof(ddb));
         }
 
-        public Functions()
-        {
-            _sns = new AmazonSimpleNotificationServiceClient();
-            _ddb = new AmazonDynamoDBClient();
-        }
-
-        public Functions(IAmazonSimpleNotificationService sns, IAmazonDynamoDB ddb)
-        {
-            _sns = sns;
-            _ddb = ddb;
-        }
-
-        public async Task<APIGatewayProxyResponse> StartAsync(APIGatewayProxyRequest request, ILambdaContext context)
-        {
-            using (LogContext.PushProperty("AwsRequestId", context.AwsRequestId))
-            {
-                var startRequest = JsonConvert.DeserializeObject<StartRequest>(request.Body);
-                Log.Information("StartRequest. Phone: {phone}", startRequest.Phone);
-
-                if (string.IsNullOrWhiteSpace(startRequest.Phone))
-                {
-                    return ErrorResponse(400, "Phone required");
-                }
-
-                try
-                {
-                    var phoneNumber = phoneNumberUtil.Parse(startRequest.Phone, null);
-                    startRequest.Phone = phoneNumberUtil.Format(phoneNumber, PhoneNumberFormat.E164);
-                }
-                catch
-                {
-                    Log.Warning("Invalid phone: {phone}", startRequest.Phone);
-                    return ErrorResponse(400, "Phone invalid");
-                }
-
-                // Lookup the "Latest" verification for this phone number.
-                long? latestVersion = await GetLatestVersionAsync(startRequest.Phone);
-                if (latestVersion == null)
-                {
-                    try
-                    {
-                        latestVersion = await InsertInitialVersionAsync(startRequest.Phone);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Failed to insert initial version. Phone: {phone}", startRequest.Phone);
-
-                        // If two threads at the same time tried to insert the initial version only 1 request will succeed.
-                        // So we attempt to lookup the latest version..
-                        latestVersion = await GetLatestVersionAsync(startRequest.Phone);
-                    }
-                }
-
-                Verification current = await GetVerificationAsync(startRequest.Phone, latestVersion.Value);
-                Log.Information("Current: {@current}", current);
-
-                // Check that it hasn't expired
-                if (current.Verified.HasValue || current.Expired)
-                {
-                    Log.Information("Inserting next verification. Phone: {phone}", current.Phone, current.Version);
-                    current = await InsertNextVersionAsync(current.Phone, current.Version);
-                }
-
-                var hotp = new Hotp(current.SecretKey);
-                var code = hotp.ComputeHOTP(current.Version);
-
-                {
-                    var message = $"Your code is: {code}";
-                    Log.Information("Sending message: {message}", message);
-
-                    var publishRequest = new PublishRequest
-                    {
-                        PhoneNumber = startRequest.Phone,
-                        Message = message
-                    };
-
-                    var publishResponse = await _sns.PublishAsync(publishRequest);
-                    Log.Information("Published message. MessageId: {messageId}", publishResponse.MessageId);
-                }
-
-                var json = JsonConvert.SerializeObject(new StartResponse { Id = current.Id }, Formatting.None);
-                return new APIGatewayProxyResponse { StatusCode = 200, Body = json };
-            }
-        }
-
-        public async Task<APIGatewayProxyResponse> CheckAsync(APIGatewayProxyRequest request, ILambdaContext context)
-        {
-            using (LogContext.PushProperty("AwsRequestId", context.AwsRequestId))
-            {
-                var checkRequest = JsonConvert.DeserializeObject<CheckRequest>(request.Body);
-                Log.Information("CheckRequest. Id: {id}", checkRequest.Id);
-
-                var verification = await GetVerificationAsync(checkRequest.Id);
-                if (verification == null)
-                {
-                    return ErrorResponse(400, "Not found");
-                }
-
-                if (verification.Verified.HasValue)
-                {
-                    return ErrorResponse(400, "Already verified");
-                }
-
-                if (verification.Expired)
-                {
-                    return ErrorResponse(400, "Expired");
-                }
-
-                if (verification.Attempts > _maxAttempts)
-                {
-                    return ErrorResponse(400, "Attempts exceeded");
-                }
-
-                var hotp = new Hotp(verification.SecretKey);
-                if (!hotp.VerifyHotp(checkRequest.Code, verification.Version))
-                {
-                    await IncrementAttemptsAsync(verification.Phone, verification.Version);
-                    return ErrorResponse(400, "Invalid code");
-                }
-
-                await SetVerifiedAsync(verification.Phone, verification.Version);
-
-                var json = JsonConvert.SerializeObject(new CheckResponse { Verified = true }, Formatting.None);
-                return new APIGatewayProxyResponse { StatusCode = 200, Body = json };
-            }
-        }
-
-        public async Task<APIGatewayProxyResponse> StatusAsync(APIGatewayProxyRequest request, ILambdaContext context)
-        {
-            using (LogContext.PushProperty("AwsRequestId", context.AwsRequestId))
-            {
-                var statusRequest = JsonConvert.DeserializeObject<StatusRequest>(request.Body);
-                Log.Information("StatusRequest. Id: {id}", statusRequest.Id);
-
-                var verification = await GetVerificationAsync(statusRequest.Id);
-                if (verification == null)
-                {
-                    return ErrorResponse(400, "Not found");
-                }
-
-                var json = JsonConvert.SerializeObject(new StatusResponse
-                {
-                    Verified = verification.Verified,
-                    Phone = verification.Phone,
-                    Created = verification.Created,
-                    Id = verification.Id
-                }, Formatting.None);
-
-                return new APIGatewayProxyResponse { StatusCode = 200, Body = json };
-            }
-        }
-
-        private async Task IncrementAttemptsAsync(string phone, long version)
+        public async Task IncrementAttemptsAsync(string phone, long version)
         {
             var request = new UpdateItemRequest
             {
@@ -212,7 +40,7 @@ namespace AwsCdkPhoneVerifyApi
             await _ddb.UpdateItemAsync(request);
         }
 
-        private async Task SetVerifiedAsync(string phone, long version)
+        public async Task SetVerifiedAsync(string phone, long version)
         {
             var request = new UpdateItemRequest
             {
@@ -233,7 +61,7 @@ namespace AwsCdkPhoneVerifyApi
             await _ddb.UpdateItemAsync(request);
         }
 
-        private async Task<Verification> InsertNextVersionAsync(string phone, long currentVersion)
+        public async Task<Verification> InsertNextVersionAsync(string phone, long currentVersion)
         {
             byte[] secretKey = KeyGeneration.GenerateRandomKey(20);
             var nextVersion = currentVersion + 1;
@@ -298,7 +126,7 @@ namespace AwsCdkPhoneVerifyApi
             return verification;
         }
 
-        private async Task<long?> InsertInitialVersionAsync(string phone)
+        public async Task<long?> InsertInitialVersionAsync(string phone)
         {
             byte[] secretKey = KeyGeneration.GenerateRandomKey(20);
 
@@ -412,7 +240,7 @@ namespace AwsCdkPhoneVerifyApi
             return verification;
         }
 
-        private async Task<long?> GetLatestVersionAsync(string phone)
+        public async Task<long?> GetLatestVersionAsync(string phone)
         {
             var request = new QueryRequest
             {
@@ -434,15 +262,6 @@ namespace AwsCdkPhoneVerifyApi
             var verification = response.Items.SingleOrDefault();
             var latest = long.Parse(verification["Latest"].N);
             return latest;
-        }
-
-        private APIGatewayProxyResponse ErrorResponse(int statusCode, string error)
-        {
-            return new APIGatewayProxyResponse
-            {
-                StatusCode = statusCode,
-                Body = JsonConvert.SerializeObject(new ErrorResponse { Error = error })
-            };
         }
     }
 }

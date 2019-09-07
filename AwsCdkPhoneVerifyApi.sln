@@ -7,6 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsCdkPhoneVerifyApi", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsCdkPhoneVerifyApi.Tests", "src\AwsCdkPhoneVerifyApi.Tests\AwsCdkPhoneVerifyApi.Tests.csproj", "{B4A37831-520E-40D0-ADD0-46186748E1D2}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsCdkPhoneVerifyApi.StartLambda", "src\AwsCdkPhoneVerifyApi.StartLambda\AwsCdkPhoneVerifyApi.StartLambda.csproj", "{415A1DAC-3CE7-4A80-98C2-48393124D00A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsCdkPhoneVerifyApi.CheckLambda", "src\AwsCdkPhoneVerifyApi.CheckLambda\AwsCdkPhoneVerifyApi.CheckLambda.csproj", "{16537E61-CF44-4290-92F1-CFFD2839FFE1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsCdkPhoneVerifyApi.StatusLambda", "src\AwsCdkPhoneVerifyApi.StatusLambda\AwsCdkPhoneVerifyApi.StatusLambda.csproj", "{9669767A-391A-45D3-B41A-2E96508AA59B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +47,42 @@ Global
 		{B4A37831-520E-40D0-ADD0-46186748E1D2}.Release|x64.Build.0 = Release|Any CPU
 		{B4A37831-520E-40D0-ADD0-46186748E1D2}.Release|x86.ActiveCfg = Release|Any CPU
 		{B4A37831-520E-40D0-ADD0-46186748E1D2}.Release|x86.Build.0 = Release|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Debug|x64.Build.0 = Debug|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Debug|x86.Build.0 = Debug|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Release|x64.ActiveCfg = Release|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Release|x64.Build.0 = Release|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Release|x86.ActiveCfg = Release|Any CPU
+		{415A1DAC-3CE7-4A80-98C2-48393124D00A}.Release|x86.Build.0 = Release|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Debug|x64.Build.0 = Debug|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Debug|x86.Build.0 = Debug|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Release|x64.ActiveCfg = Release|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Release|x64.Build.0 = Release|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Release|x86.ActiveCfg = Release|Any CPU
+		{16537E61-CF44-4290-92F1-CFFD2839FFE1}.Release|x86.Build.0 = Release|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Debug|x64.Build.0 = Debug|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Debug|x86.Build.0 = Debug|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Release|x64.ActiveCfg = Release|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Release|x64.Build.0 = Release|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Release|x86.ActiveCfg = Release|Any CPU
+		{9669767A-391A-45D3-B41A-2E96508AA59B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

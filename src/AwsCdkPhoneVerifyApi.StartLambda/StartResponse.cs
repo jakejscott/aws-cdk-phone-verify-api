@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AwsCdkPhoneVerifyApi
+namespace AwsCdkPhoneVerifyApi.StartLambda
 {
     public class StartResponse
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AwsCdkPhoneVerifyApi
+namespace AwsCdkPhoneVerifyApi.StatusLambda
 {
     public class StatusResponse
     {

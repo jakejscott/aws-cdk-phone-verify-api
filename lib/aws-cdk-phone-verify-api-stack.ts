@@ -36,29 +36,29 @@ export class AwsCdkPhoneVerifyApiStack extends cdk.Stack {
     };
 
     const start = new lambda.Function(this, 'StartLambda', {
-      code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi/bin/Debug/netcoreapp2.1/publish'),
+      code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi.StartLambda/bin/Debug/netcoreapp2.1/publish'),
       runtime: lambda.Runtime.DOTNET_CORE_2_1,
-      handler: 'AwsCdkPhoneVerifyApi::AwsCdkPhoneVerifyApi.Functions::StartAsync',
+      handler: 'AwsCdkPhoneVerifyApi.StartLambda::AwsCdkPhoneVerifyApi.StartLambda.Function::ExecuteAsync',
       memorySize: 3008,
       timeout: cdk.Duration.seconds(30),
       environment: environment
     });
 
     const check = new lambda.Function(this, 'CheckLambda', {
-      code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi/bin/Debug/netcoreapp2.1/publish'),
+      code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi.CheckLambda/bin/Debug/netcoreapp2.1/publish'),
       runtime: lambda.Runtime.DOTNET_CORE_2_1,
-      handler: 'AwsCdkPhoneVerifyApi::AwsCdkPhoneVerifyApi.Functions::CheckAsync',
+      handler: 'AwsCdkPhoneVerifyApi.CheckLambda::AwsCdkPhoneVerifyApi.CheckLambda.Function::ExecuteAsync',
       memorySize: 3008,
       timeout: cdk.Duration.seconds(30),
       environment: environment
     });
 
     const status = new lambda.Function(this, 'StatusLambda', {
-      code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi/bin/Debug/netcoreapp2.1/publish'),
+      code: lambda.Code.asset('src/AwsCdkPhoneVerifyApi.StatusLambda/bin/Debug/netcoreapp2.1/publish'),
       runtime: lambda.Runtime.DOTNET_CORE_2_1,
-      handler: 'AwsCdkPhoneVerifyApi::AwsCdkPhoneVerifyApi.Functions::StatusAsync',
+      handler: 'AwsCdkPhoneVerifyApi.StatusLambda::AwsCdkPhoneVerifyApi.StatusLambda.Function::ExecuteAsync',
       memorySize: 3008,
-      timeout: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(60),
       environment: environment
     });
 

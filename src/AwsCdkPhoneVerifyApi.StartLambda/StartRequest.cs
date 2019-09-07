@@ -1,4 +1,4 @@
-﻿namespace AwsCdkPhoneVerifyApi
+﻿namespace AwsCdkPhoneVerifyApi.StartLambda
 {
     public class StartRequest
     {

@@ -6,7 +6,6 @@ node_modules
 .cdk.staging
 cdk.out
 .vs
-src/AwsCdkPhoneVerifyApi/bin
-src/AwsCdkPhoneVerifyApi/obj
-src/AwsCdkPhoneVerifyApi.Tests/bin
-src/AwsCdkPhoneVerifyApi.Tests/obj
+
+src/*/bin
+src/*/obj

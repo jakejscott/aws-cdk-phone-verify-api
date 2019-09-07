@@ -1,4 +1,4 @@
-﻿namespace AwsCdkPhoneVerifyApi
+﻿namespace AwsCdkPhoneVerifyApi.CheckLambda
 {
     public class CheckResponse
     {

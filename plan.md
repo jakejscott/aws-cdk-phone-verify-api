@@ -84,3 +84,9 @@ Recommended articles:
 * Usage plans and API keys https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-usage-plans.html
 * API Gateway CDK construct https://docs.aws.amazon.com/cdk/api/latest/docs/aws-apigateway-readme.html#integration-targets
 * Rate limiting https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html
+
+# Serverless dotnet - E09: Refactoring
+
+* Move DynamoDB code into a repository
+* Separate each Lambda into it's own project
+* Unit tests

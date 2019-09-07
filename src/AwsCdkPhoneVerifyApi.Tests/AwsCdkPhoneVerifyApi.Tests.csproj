@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AwsCdkPhoneVerifyApi.StartLambda\AwsCdkPhoneVerifyApi.StartLambda.csproj" />
     <ProjectReference Include="..\AwsCdkPhoneVerifyApi\AwsCdkPhoneVerifyApi.csproj" />
   </ItemGroup>
 
