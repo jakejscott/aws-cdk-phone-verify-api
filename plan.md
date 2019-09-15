@@ -89,4 +89,11 @@ Recommended articles:
 
 * Move DynamoDB code into a repository
 * Separate each Lambda into it's own project
-* Unit tests
+
+# Serverless dotnet - E10: Unit testing
+
+* Unit testing and mocks using NSubstitute
+
+Recommended articles:
+
+https://nsubstitute.github.io

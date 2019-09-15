@@ -7,7 +7,6 @@ using Amazon.SimpleNotificationService;
 using PhoneNumbers;
 using Serilog;
 using Serilog.Context;
-using Serilog.Formatting.Json;
 using System;
 using OtpNet;
 using Amazon.SimpleNotificationService.Model;
@@ -18,30 +17,26 @@ namespace AwsCdkPhoneVerifyApi.StartLambda
 {
     public class Function
     {
-        private static PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.GetInstance();
+        private static readonly PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.GetInstance();
 
-        private IAmazonSimpleNotificationService _sns;
-        private IVerificationsRepository _repo;
-        private static int _maxAttempts;
+        private readonly IAmazonSimpleNotificationService sns;
+        private readonly IVerificationsRepository repo;
 
         static Function()
         {
             Log.Logger = SerilogLogging.ConfigureLogging();
-
-            var maxAttempts = Environment.GetEnvironmentVariable("MAX_ATTEMPTS");
-            _maxAttempts = int.TryParse(maxAttempts, out var max) ? max : 3;
         }
 
         public Function()
         {
-            _sns = new AmazonSimpleNotificationServiceClient();
-            _repo = new VerificationsRepository(new AmazonDynamoDBClient());
+            sns = new AmazonSimpleNotificationServiceClient();
+            repo = new VerificationsRepository(new AmazonDynamoDBClient());
         }
 
         public Function(IAmazonSimpleNotificationService sns, IVerificationsRepository repo)
         {
-            _sns = sns;
-            _repo = repo;
+            this.sns = sns;
+            this.repo = repo;
         }
 
         public async Task<APIGatewayProxyResponse> ExecuteAsync(APIGatewayProxyRequest request, ILambdaContext context)
@@ -68,12 +63,12 @@ namespace AwsCdkPhoneVerifyApi.StartLambda
                 }
 
                 // Lookup the "Latest" verification for this phone number.
-                long? latestVersion = await _repo.GetLatestVersionAsync(startRequest.Phone);
+                long? latestVersion = await repo.GetLatestVersionAsync(startRequest.Phone);
                 if (latestVersion == null)
                 {
                     try
                     {
-                        latestVersion = await _repo.InsertInitialVersionAsync(startRequest.Phone);
+                        latestVersion = await repo.InsertInitialVersionAsync(startRequest.Phone);
                     }
                     catch (Exception ex)
                     {
@@ -81,18 +76,18 @@ namespace AwsCdkPhoneVerifyApi.StartLambda
 
                         // If two threads at the same time tried to insert the initial version only 1 request will succeed.
                         // So we attempt to lookup the latest version..
-                        latestVersion = await _repo.GetLatestVersionAsync(startRequest.Phone);
+                        latestVersion = await repo.GetLatestVersionAsync(startRequest.Phone);
                     }
                 }
 
-                Verification current = await _repo.GetVerificationAsync(startRequest.Phone, latestVersion.Value);
+                Verification current = await repo.GetVerificationAsync(startRequest.Phone, latestVersion.Value);
                 Log.Information("Current: {@current}", current);
 
                 // Check that it hasn't expired
                 if (current.Verified.HasValue || current.Expired)
                 {
                     Log.Information("Inserting next verification. Phone: {phone}", current.Phone, current.Version);
-                    current = await _repo.InsertNextVersionAsync(current.Phone, current.Version);
+                    current = await repo.InsertNextVersionAsync(current.Phone, current.Version);
                 }
 
                 var hotp = new Hotp(current.SecretKey);
@@ -107,7 +102,7 @@ namespace AwsCdkPhoneVerifyApi.StartLambda
                         Message = message
                     };
 
-                    var publishResponse = await _sns.PublishAsync(publishRequest);
+                    var publishResponse = await sns.PublishAsync(publishRequest);
                     Log.Information("Published message. MessageId: {messageId}", publishResponse.MessageId);
                 }
 
