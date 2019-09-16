@@ -97,3 +97,7 @@ Recommended articles:
 Recommended articles:
 
 https://nsubstitute.github.io
+
+# Serverless dotnet - E11: More unit testing
+
+* Adding unit tests to the check endpoint

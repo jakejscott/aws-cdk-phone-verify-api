@@ -3,13 +3,8 @@ using Amazon.Lambda.APIGatewayEvents;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
-using Amazon.SimpleNotificationService;
-using PhoneNumbers;
 using Serilog;
 using Serilog.Context;
-using Serilog.Formatting.Json;
-using System;
-using OtpNet;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
@@ -17,32 +12,20 @@ namespace AwsCdkPhoneVerifyApi.StatusLambda
 {
     public class Function
     {
-        private static PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.GetInstance();
-
-        private IAmazonSimpleNotificationService _sns;
-        private IVerificationsRepository _repo;
-        private static int _maxAttempts;
+        private readonly IVerificationsRepository _repo;
 
         static Function()
         {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console(formatter: new JsonFormatter())
-                .Enrich.FromLogContext()
-                .CreateLogger();
-
-            var maxAttempts = Environment.GetEnvironmentVariable("MAX_ATTEMPTS");
-            _maxAttempts = int.TryParse(maxAttempts, out var max) ? max : 3;
+            Log.Logger = SerilogLogging.ConfigureLogging();
         }
 
         public Function()
         {
-            _sns = new AmazonSimpleNotificationServiceClient();
             _repo = new VerificationsRepository(new AmazonDynamoDBClient());
         }
 
-        public Function(IAmazonSimpleNotificationService sns, IVerificationsRepository repo)
+        public Function(IVerificationsRepository repo)
         {
-            _sns = sns;
             _repo = repo;
         }
 

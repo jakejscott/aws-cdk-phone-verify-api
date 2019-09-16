@@ -14,25 +14,16 @@ using OtpNet;
 namespace AwsCdkPhoneVerifyApi.Tests
 {
     [TestFixture]
-    public class StartLambdaTests
+    public class StartLambdaTests : BaseLambdaTest
     {
-        const string phone = "+64223062141";
-
         private Function function;
 
-        private IAmazonSimpleNotificationService sns;
-        private IVerificationsRepository repo;
-
         [SetUp]
-        public void SetUp()
+        public override void SetUp()
         {
-            sns = Substitute.For<IAmazonSimpleNotificationService>();
-            repo = Substitute.For<IVerificationsRepository>();
-
+            base.SetUp();
             function = new Function(sns, repo);
         }
-
-        private APIGatewayProxyRequest CreateRequest<T>(T value) => new APIGatewayProxyRequest { Body = JsonConvert.SerializeObject(value) };
 
         [Test]
         public async Task PhoneIsRequired()
