@@ -62,7 +62,7 @@ Recommended articles:
 
 Recommended articles:
 
-* DynamoDB GSI https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html
+* [DynamoDB GSI](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)
 
 # Serverless dotnet - E07: Verifying one-time passwords (HOTP)
 
@@ -81,9 +81,9 @@ Recommended articles:
 
 Recommended articles:
 
-* Usage plans and API keys https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-usage-plans.html
-* API Gateway CDK construct https://docs.aws.amazon.com/cdk/api/latest/docs/aws-apigateway-readme.html#integration-targets
-* Rate limiting https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html
+* [Usage plans and API keys](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-usage-plans.html)
+* [API Gateway CDK construct](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-apigateway-readme.html#integration-targets)
+* [Rate limiting](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html)
 
 # Serverless dotnet - E09: Refactoring
 
@@ -96,8 +96,20 @@ Recommended articles:
 
 Recommended articles:
 
-https://nsubstitute.github.io
+* [nsubstitute](https://nsubstitute.github.io)
 
 # Serverless dotnet - E11: More unit testing
 
 * Adding unit tests to the check endpoint
+
+# Serverless dotnet - E12: Github actions
+
+* Build the code using Github actions
+* Run the unit tests
+* Deploy the code to AWS
+* Integrations tests
+
+Recommended articles:
+
+* [Github Actions](https://github.com/features/actions)
+* [Github Actions docs](https://help.github.com/en/articles/workflow-syntax-for-github-actions)
