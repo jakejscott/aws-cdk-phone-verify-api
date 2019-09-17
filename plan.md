@@ -102,7 +102,7 @@ Recommended articles:
 
 * Adding unit tests to the check endpoint
 
-# Serverless dotnet - E12: Building with Github actions
+# Serverless dotnet - E12: Building with Github Actions
 
 * Build the code using Github actions
 * Run the unit tests
@@ -113,3 +113,27 @@ Recommended articles:
 
 * [Github Actions](https://github.com/features/actions)
 * [Github Actions docs](https://help.github.com/en/articles/workflow-syntax-for-github-actions)
+
+# Serverless dotnet - E13: Deploying with Github Actions
+
+* Deploying to AWS using CDK
+
+```
+    - name: Publish
+      run: dotnet publish
+    - name: Setup cdk
+      run: npm i -g aws-cdk
+    - name: npm install
+      run: npm install
+    - name: npm run build
+      run: npm run build
+    - name: Deploy with CDK
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      run: cdk deploy
+```
+
+* [Github Actions: Contexts and expressions](https://help.github.com/en/articles/contexts-and-expression-syntax-for-github-actions)
+* [Github Actions: Virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions)

@@ -8,7 +8,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     
     steps:
     - uses: actions/checkout@v1
@@ -20,3 +20,17 @@ jobs:
       run: dotnet build --configuration Debug
     - name: Test with dotnet
       run: dotnet test
+    - name: Publish with dotnet
+      run: dotnet publish
+    - name: Setup cdk
+      run: npm i -g aws-cdk
+    - name: npm install
+      run: npm install
+    - name: npm run build
+      run: npm run build
+    - name: Deploy with CDK
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      run: cdk deploy
