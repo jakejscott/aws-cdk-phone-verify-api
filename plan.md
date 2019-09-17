@@ -102,7 +102,7 @@ Recommended articles:
 
 * Adding unit tests to the check endpoint
 
-# Serverless dotnet - E12: Github actions
+# Serverless dotnet - E12: Building with Github actions
 
 * Build the code using Github actions
 * Run the unit tests
