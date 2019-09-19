@@ -107,7 +107,6 @@ Recommended articles:
 * Build the code using Github actions
 * Run the unit tests
 * Deploy the code to AWS
-* Integrations tests
 
 Recommended articles:
 
@@ -118,22 +117,10 @@ Recommended articles:
 
 * Deploying to AWS using CDK
 
-```
-    - name: Publish
-      run: dotnet publish
-    - name: Setup cdk
-      run: npm i -g aws-cdk
-    - name: npm install
-      run: npm install
-    - name: npm run build
-      run: npm run build
-    - name: Deploy with CDK
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-      run: cdk deploy
-```
-
 * [Github Actions: Contexts and expressions](https://help.github.com/en/articles/contexts-and-expression-syntax-for-github-actions)
 * [Github Actions: Virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions)
+
+# Serverless dotnet - E14: Integration tests with Github Actions
+
+* Add an integration tests project
+* Run the integration tests after deploying to AWS
