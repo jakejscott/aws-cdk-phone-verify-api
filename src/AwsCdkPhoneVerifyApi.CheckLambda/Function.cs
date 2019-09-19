@@ -3,11 +3,8 @@ using Amazon.Lambda.APIGatewayEvents;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
-using Amazon.SimpleNotificationService;
-using PhoneNumbers;
 using Serilog;
 using Serilog.Context;
-using Serilog.Formatting.Json;
 using System;
 using OtpNet;
 
@@ -17,11 +14,8 @@ namespace AwsCdkPhoneVerifyApi.CheckLambda
 {
     public class Function
     {
-        private static PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.GetInstance();
-
-        private IAmazonSimpleNotificationService _sns;
-        private IVerificationsRepository _repo;
-        private static int _maxAttempts;
+        private readonly IVerificationsRepository _repo;
+        private static readonly int _maxAttempts;
 
         static Function()
         {
@@ -33,13 +27,11 @@ namespace AwsCdkPhoneVerifyApi.CheckLambda
 
         public Function()
         {
-            _sns = new AmazonSimpleNotificationServiceClient();
             _repo = new VerificationsRepository(new AmazonDynamoDBClient());
         }
 
-        public Function(IAmazonSimpleNotificationService sns, IVerificationsRepository repo)
+        public Function(IVerificationsRepository repo)
         {
-            _sns = sns;
             _repo = repo;
         }
 
