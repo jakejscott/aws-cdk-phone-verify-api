@@ -19,7 +19,7 @@ namespace AwsCdkPhoneVerifyApi.Tests
         public override void SetUp()
         {
             base.SetUp();
-            function = new Function(sns, repo);
+            function = new Function(repo);
         }
 
         [Test]
