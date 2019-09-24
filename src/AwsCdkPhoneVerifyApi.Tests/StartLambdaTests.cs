@@ -1,9 +1,8 @@
 using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
-using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using AwsCdkPhoneVerifyApi.StartLambda;
 using Newtonsoft.Json;
@@ -24,6 +23,8 @@ namespace AwsCdkPhoneVerifyApi.Tests
             base.SetUp();
             function = new Function(sns, repo);
         }
+
+        
 
         [Test]
         public async Task PhoneIsRequired()
@@ -81,6 +82,10 @@ namespace AwsCdkPhoneVerifyApi.Tests
             repo.GetVerificationAsync(phone, 1).Returns(current);
 
             // Mock
+            var verifications = Enumerable.Empty<Verification>().ToList();
+            repo.GetLatestVerificationsAsync(phone, 10).Returns(verifications);
+
+            // Mock
             var nextVersion = new Verification
             {
                 Id = Guid.NewGuid(),
@@ -132,6 +137,10 @@ namespace AwsCdkPhoneVerifyApi.Tests
                 SecretKey = Encoding.UTF8.GetBytes("secret")
             };
             repo.GetVerificationAsync(phone, 1).Returns(current);
+
+            // Mock
+            var verifications = Enumerable.Empty<Verification>().ToList();
+            repo.GetLatestVerificationsAsync(phone, 10).Returns(verifications);
 
             // Mock
             sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(new PublishResponse { MessageId = "test1" });

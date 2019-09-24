@@ -8,6 +8,8 @@ using PhoneNumbers;
 using Serilog;
 using Serilog.Context;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using OtpNet;
 using Amazon.SimpleNotificationService.Model;
 
@@ -60,6 +62,16 @@ namespace AwsCdkPhoneVerifyApi.StartLambda
                 {
                     Log.Warning("Invalid phone: {phone}", startRequest.Phone);
                     return ErrorResponse(400, "Phone invalid");
+                }
+
+                // Rate limiting
+                var limit = 10;
+                var period = TimeSpan.FromMinutes(30);
+                var verifications = await repo.GetLatestVerificationsAsync(startRequest.Phone, limit);
+                var rateLimit = RateLimitHelper.HasExceeededRateLimit(verifications, limit, DateTimeOffset.UtcNow - period);
+                if (rateLimit)
+                {
+                    return ErrorResponse(429, "Rate limit");
                 }
 
                 // Lookup the "Latest" verification for this phone number.

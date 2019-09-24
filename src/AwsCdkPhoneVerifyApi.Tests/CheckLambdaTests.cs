@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.TestUtilities;
@@ -125,6 +126,7 @@ namespace AwsCdkPhoneVerifyApi.Tests
             // Mock
             var verification = new Verification
             {
+                Phone = phone,
                 Id = id,
                 Created = DateTime.UtcNow,
                 Attempts = 3,
@@ -132,6 +134,10 @@ namespace AwsCdkPhoneVerifyApi.Tests
                 Version = 1
             };
             repo.GetVerificationAsync(id).Returns(verification);
+
+            // Mock
+            var verifications = Enumerable.Empty<Verification>().ToList();
+            repo.GetLatestVerificationsAsync(phone, 5).Returns(verifications);
 
             // Act
             var response = await function.ExecuteAsync(request, new TestLambdaContext());
@@ -168,6 +174,10 @@ namespace AwsCdkPhoneVerifyApi.Tests
                 Version = 1
             };
             repo.GetVerificationAsync(id).Returns(verification);
+
+            // Mock
+            var verifications = Enumerable.Empty<Verification>().ToList();
+            repo.GetLatestVerificationsAsync(phone, 5).Returns(verifications);
 
             // Act
             var response = await function.ExecuteAsync(request, new TestLambdaContext());

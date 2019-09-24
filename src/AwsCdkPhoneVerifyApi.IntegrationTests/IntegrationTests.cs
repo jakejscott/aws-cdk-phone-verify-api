@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,6 +51,8 @@ namespace AwsCdkPhoneVerifyApi.IntegrationTests
         private HttpClient httpClient;
         private VerificationsRepository repository;
 
+        private const string phone = "+64223062141";
+
         [SetUp]
         public void Setup()
         {
@@ -67,9 +70,15 @@ namespace AwsCdkPhoneVerifyApi.IntegrationTests
         }
 
         [Test]
+        public async Task GetLatestVerifications()
+        {
+            var verifications = await repository.GetLatestVerificationsAsync(phone, 10);
+        }
+
+        [Test]
         public async Task StartVerification()
         {
-            var phone = "+64223062141";
+            
             Guid verificationId;
 
             // Start verification

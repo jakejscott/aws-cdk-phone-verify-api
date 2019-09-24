@@ -124,3 +124,8 @@ Recommended articles:
 
 * Add an integration tests project
 * Run the integration tests after deploying to AWS
+
+# Serverless dotnet - E15: Rate limiting using DynamoDB
+
+Start Verification: The top is 10 every half an hour, per phone number.
+Check Verification: The top is 5 every day, per phone number.

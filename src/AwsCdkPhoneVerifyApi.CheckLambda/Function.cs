@@ -14,7 +14,7 @@ namespace AwsCdkPhoneVerifyApi.CheckLambda
 {
     public class Function
     {
-        private readonly IVerificationsRepository _repo;
+        private readonly IVerificationsRepository repo;
         private static readonly int _maxAttempts;
 
         static Function()
@@ -27,12 +27,12 @@ namespace AwsCdkPhoneVerifyApi.CheckLambda
 
         public Function()
         {
-            _repo = new VerificationsRepository(new AmazonDynamoDBClient());
+            repo = new VerificationsRepository(new AmazonDynamoDBClient());
         }
 
         public Function(IVerificationsRepository repo)
         {
-            _repo = repo;
+            this.repo = repo;
         }
 
         public async Task<APIGatewayProxyResponse> ExecuteAsync(APIGatewayProxyRequest request, ILambdaContext context)
@@ -42,7 +42,7 @@ namespace AwsCdkPhoneVerifyApi.CheckLambda
                 var checkRequest = JsonConvert.DeserializeObject<CheckRequest>(request.Body);
                 Log.Information("CheckRequest. Id: {id}", checkRequest.Id);
 
-                var verification = await _repo.GetVerificationAsync(checkRequest.Id);
+                var verification = await repo.GetVerificationAsync(checkRequest.Id);
                 if (verification == null)
                 {
                     return ErrorResponse(400, "Not found");
@@ -63,14 +63,24 @@ namespace AwsCdkPhoneVerifyApi.CheckLambda
                     return ErrorResponse(400, "Attempts exceeded");
                 }
 
+                // Rate limiting
+                var limit = 5;
+                var period = TimeSpan.FromDays(1);
+                var verifications = await repo.GetLatestVerificationsAsync(verification.Phone, limit);
+                var rateLimit = RateLimitHelper.HasExceeededRateLimit(verifications, limit, DateTimeOffset.UtcNow - period);
+                if (rateLimit)
+                {
+                    return ErrorResponse(429, "Rate limit");
+                }
+
                 var hotp = new Hotp(verification.SecretKey);
                 if (!hotp.VerifyHotp(checkRequest.Code, verification.Version))
                 {
-                    await _repo.IncrementAttemptsAsync(verification.Phone, verification.Version);
+                    await repo.IncrementAttemptsAsync(verification.Phone, verification.Version);
                     return ErrorResponse(400, "Invalid code");
                 }
 
-                await _repo.SetVerifiedAsync(verification.Phone, verification.Version);
+                await repo.SetVerifiedAsync(verification.Phone, verification.Version);
 
                 var json = JsonConvert.SerializeObject(new CheckResponse { Verified = true }, Formatting.None);
                 return new APIGatewayProxyResponse { StatusCode = 200, Body = json };

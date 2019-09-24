@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AwsCdkPhoneVerifyApi
@@ -12,5 +13,6 @@ namespace AwsCdkPhoneVerifyApi
         Task<long?> InsertInitialVersionAsync(string phone);
         Task<Verification> InsertNextVersionAsync(string phone, long currentVersion);
         Task SetVerifiedAsync(string phone, long version);
+        Task<List<Verification>> GetLatestVerificationsAsync(string phone, int limit);
     }
 }

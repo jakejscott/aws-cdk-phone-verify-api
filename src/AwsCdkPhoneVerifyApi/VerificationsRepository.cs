@@ -61,6 +61,33 @@ namespace AwsCdkPhoneVerifyApi
             await _ddb.UpdateItemAsync(request);
         }
 
+        public async Task<List<Verification>> GetLatestVerificationsAsync(string phone, int limit)
+        {
+            var request = new QueryRequest
+            {
+                TableName = "Verifications",
+                ConsistentRead = true,
+                ScanIndexForward = false,
+                Limit = limit,
+                KeyConditionExpression = "Phone = :Phone AND Version > :Version",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    [":Phone"] = new AttributeValue { S = phone },
+                    [":Version"] = new AttributeValue { N = 0.ToString() }
+                }
+            };
+
+            var response = await _ddb.QueryAsync(request);
+            var verifications = response.Items.Select(Map).ToList();
+            return verifications;
+        }
+
+        public bool HasExceeededRateLimit(List<Verification> verifications, int limit, DateTimeOffset min)
+        {
+            var count = verifications.Count(x => x.Created >= min);
+            return count >= limit;
+        }
+
         public async Task<Verification> InsertNextVersionAsync(string phone, long currentVersion)
         {
             byte[] secretKey = KeyGeneration.GenerateRandomKey(20);
@@ -110,7 +137,7 @@ namespace AwsCdkPhoneVerifyApi
                 }
             };
 
-            var response = await _ddb.TransactWriteItemsAsync(request);
+            await _ddb.TransactWriteItemsAsync(request);
 
             var verification = new Verification
             {
@@ -166,7 +193,7 @@ namespace AwsCdkPhoneVerifyApi
                 }
             };
 
-            var response = await _ddb.TransactWriteItemsAsync(request);
+            await _ddb.TransactWriteItemsAsync(request);
             return 1;
         }
 
