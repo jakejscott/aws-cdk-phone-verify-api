@@ -24,8 +24,6 @@ namespace AwsCdkPhoneVerifyApi.Tests
             function = new Function(sns, repo);
         }
 
-        
-
         [Test]
         public async Task PhoneIsRequired()
         {
@@ -57,6 +55,28 @@ namespace AwsCdkPhoneVerifyApi.Tests
             var error = JsonConvert.DeserializeObject<ErrorResponse>(response.Body);
             Assert.AreEqual("Phone invalid", error.Error);
         }
+
+        [Test]
+        public async Task RateLimit()
+        {
+            // Arrange
+            var startRequest = new StartRequest { Phone = phone };
+            var request = CreateRequest(startRequest);
+
+            // Mock
+            var verifications = Enumerable.Repeat(new Verification { Created = DateTime.UtcNow }, 20).ToList();
+            repo.GetLatestVerificationsAsync(phone, 10).Returns(verifications);
+
+            // Act
+            var response = await function.ExecuteAsync(request, new TestLambdaContext());
+
+            // Assert
+            Assert.AreEqual(429, response.StatusCode);
+            var error = JsonConvert.DeserializeObject<ErrorResponse>(response.Body);
+            Assert.AreEqual("Rate limit", error.Error);
+
+        }
+
 
         [Test]
         public async Task VerificationIsExpired()

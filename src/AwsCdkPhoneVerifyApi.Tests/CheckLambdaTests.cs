@@ -40,6 +40,43 @@ namespace AwsCdkPhoneVerifyApi.Tests
         }
 
         [Test]
+        public async Task RateLimit()
+        {
+            var id = Guid.NewGuid();
+            var secret = Encoding.UTF8.GetBytes("secret");
+            var hotp = new Hotp(secret);
+            var code = hotp.ComputeHOTP(1);
+
+            // Arrange
+            var startRequest = new CheckRequest { Id = id, Code = code };
+            var request = CreateRequest(startRequest);
+
+            // Mock
+            var verification = new Verification
+            {
+                Id = id,
+                Phone = phone,
+                Created = DateTime.UtcNow,
+                Attempts = 3,
+                SecretKey = secret,
+                Version = 1
+            };
+            repo.GetVerificationAsync(id).Returns(verification);
+
+            // Mock
+            var verifications = Enumerable.Repeat(new Verification { Created = DateTime.UtcNow }, 20).ToList();
+            repo.GetLatestVerificationsAsync(phone, 5).Returns(verifications);
+
+            // Act
+            var response = await function.ExecuteAsync(request, new TestLambdaContext());
+
+            // Assert
+            Assert.AreEqual(429, response.StatusCode);
+            var error = JsonConvert.DeserializeObject<ErrorResponse>(response.Body);
+            Assert.AreEqual("Rate limit", error.Error);
+        }
+
+        [Test]
         public async Task AlreadyVerified()
         {
             var id = Guid.NewGuid();
