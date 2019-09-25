@@ -72,7 +72,7 @@ namespace AwsCdkPhoneVerifyApi.IntegrationTests
         [Test]
         public async Task GetLatestVerifications()
         {
-            var verifications = await repository.GetLatestVerificationsAsync(phone, 10);
+            var verifications = await repository.GetLatestVerificationsAsync(phone, 10, verified: true);
         }
 
         [Test]

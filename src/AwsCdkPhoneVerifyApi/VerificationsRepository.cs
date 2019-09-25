@@ -61,7 +61,7 @@ namespace AwsCdkPhoneVerifyApi
             await _ddb.UpdateItemAsync(request);
         }
 
-        public async Task<List<Verification>> GetLatestVerificationsAsync(string phone, int limit)
+        public async Task<List<Verification>> GetLatestVerificationsAsync(string phone, int limit, bool? verified = null)
         {
             var request = new QueryRequest
             {
@@ -76,6 +76,11 @@ namespace AwsCdkPhoneVerifyApi
                     [":Version"] = new AttributeValue { N = 0.ToString() }
                 }
             };
+
+            if (verified.HasValue && verified.Value)
+            {
+                request.FilterExpression = "attribute_exists(Verified)";
+            }
 
             var response = await _ddb.QueryAsync(request);
             var verifications = response.Items.Select(Map).ToList();

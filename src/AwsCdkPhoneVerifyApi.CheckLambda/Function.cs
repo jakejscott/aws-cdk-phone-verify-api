@@ -66,7 +66,7 @@ namespace AwsCdkPhoneVerifyApi.CheckLambda
                 // Rate limiting
                 var limit = 5;
                 var period = TimeSpan.FromDays(1);
-                var verifications = await repo.GetLatestVerificationsAsync(verification.Phone, limit);
+                var verifications = await repo.GetLatestVerificationsAsync(verification.Phone, limit, verified: true);
                 var rateLimit = RateLimitHelper.HasExceeededRateLimit(verifications, limit, DateTimeOffset.UtcNow - period);
                 if (rateLimit)
                 {
