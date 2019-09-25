@@ -65,7 +65,7 @@ namespace AwsCdkPhoneVerifyApi.Tests
 
             // Mock
             var verifications = Enumerable.Repeat(new Verification { Created = DateTime.UtcNow }, 20).ToList();
-            repo.GetLatestVerificationsAsync(phone, 5).Returns(verifications);
+            repo.GetLatestVerificationsAsync(phone, 5, true).Returns(verifications);
 
             // Act
             var response = await function.ExecuteAsync(request, new TestLambdaContext());
@@ -173,6 +173,9 @@ namespace AwsCdkPhoneVerifyApi.Tests
             repo.GetVerificationAsync(id).Returns(verification);
 
             // Mock
+            repo.GetLatestVerificationsAsync(phone, 5, true).Returns(Enumerable.Empty<Verification>().ToList());
+
+            // Mock
             var verifications = Enumerable.Empty<Verification>().ToList();
             repo.GetLatestVerificationsAsync(phone, 5).Returns(verifications);
 
@@ -211,6 +214,9 @@ namespace AwsCdkPhoneVerifyApi.Tests
                 Version = 1
             };
             repo.GetVerificationAsync(id).Returns(verification);
+
+            // Mock
+            repo.GetLatestVerificationsAsync(phone, 5, true).Returns(Enumerable.Empty<Verification>().ToList());
 
             // Mock
             var verifications = Enumerable.Empty<Verification>().ToList();
